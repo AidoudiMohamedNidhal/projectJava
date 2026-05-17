@@ -1,0 +1,370 @@
+{
+  "info": {
+    "_postman_id": "4e8c9b0d-8a58-4c92-a3c0-sge-api",
+    "name": "SGE API - Full Test",
+    "description": "Collection complete pour tester l'API SGE avec JWT. Run order: Auth, Filieres, Modules, Etudiants, Notes, Dashboard, Cleanup.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "adminToken", "value": "" },
+    { "key": "userToken", "value": "" },
+    { "key": "filiereId", "value": "" },
+    { "key": "moduleId", "value": "" },
+    { "key": "etudiantId", "value": "" },
+    { "key": "noteId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Create or Update Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('admin created', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/create-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "create-admin"]
+            }
+          }
+        },
+        {
+          "name": "Register User Etudiant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('user registered or already exists', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"etudiant\",\n  \"password\": \"etudiant123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('admin login ok', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', json.token);",
+                  "pm.test('admin token saved', function () { pm.expect(json.token).to.be.a('string').and.not.empty; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login User Etudiant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('user login ok', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('userToken', json.token);",
+                  "pm.test('user token saved', function () { pm.expect(json.token).to.be.a('string').and.not.empty; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"etudiant\",\n  \"password\": \"etudiant123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Filieres Admin",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Create Filiere",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('filiere created', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('filiereId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"DSI API\",\n  \"niveau\": \"Licence 3\",\n  \"capacite\": 30\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/filieres", "host": ["{{baseUrl}}"], "path": ["filieres"] }
+          }
+        },
+        {
+          "name": "List Filieres",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/filieres", "host": ["{{baseUrl}}"], "path": ["filieres"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('list ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Get Filiere By ID",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/filieres/{{filiereId}}", "host": ["{{baseUrl}}"], "path": ["filieres", "{{filiereId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('get ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Update Filiere",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"DSI API Updated\",\n  \"niveau\": \"Licence 3\",\n  \"capacite\": 35\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/filieres/{{filiereId}}", "host": ["{{baseUrl}}"], "path": ["filieres", "{{filiereId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('update ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "03 - Modules Admin",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Create Module",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('module created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('moduleId', pm.response.json().id);"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Java API\",\n  \"code\": \"JAVA-API\",\n  \"coefficient\": 3,\n  \"filiere\": { \"id\": {{filiereId}} }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/modules", "host": ["{{baseUrl}}"], "path": ["modules"] }
+          }
+        },
+        {
+          "name": "List Modules",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/modules", "host": ["{{baseUrl}}"], "path": ["modules"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('list ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "04 - Etudiants Admin/User",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Create Etudiant",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('etudiant created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('etudiantId', pm.response.json().id);"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Postman\",\n  \"prenom\": \"Etudiant\",\n  \"email\": \"postman.etudiant@example.com\",\n  \"cin\": \"PM123456\",\n  \"dateNaissance\": \"2002-01-15\",\n  \"groupe\": \"G1\",\n  \"moyenne\": 0,\n  \"filiere\": { \"id\": {{filiereId}} }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/etudiants", "host": ["{{baseUrl}}"], "path": ["etudiants"] }
+          }
+        },
+        {
+          "name": "List Etudiants",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants", "host": ["{{baseUrl}}"], "path": ["etudiants"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('list ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Get Etudiant By ID",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants/{{etudiantId}}", "host": ["{{baseUrl}}"], "path": ["etudiants", "{{etudiantId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('get ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Search Etudiant By Nom",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants/recherche?nom=Postman", "host": ["{{baseUrl}}"], "path": ["etudiants", "recherche"], "query": [{ "key": "nom", "value": "Postman" }] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('search ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Filter Etudiants By Groupe",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants/groupe?g=G1", "host": ["{{baseUrl}}"], "path": ["etudiants", "groupe"], "query": [{ "key": "g", "value": "G1" }] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('groupe ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Etudiants Page",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants/page?page=0&size=5&sortBy=id", "host": ["{{baseUrl}}"], "path": ["etudiants", "page"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "5" }, { "key": "sortBy", "value": "id" }] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('page ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "User Can List Etudiants",
+          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{userToken}}", "type": "string" }] },
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/etudiants", "host": ["{{baseUrl}}"], "path": ["etudiants"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('user list ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "05 - Notes Admin/User",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Create Note",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('note created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('noteId', pm.response.json().id);"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valeur\": 15.5,\n  \"etudiant\": { \"id\": {{etudiantId}} },\n  \"module\": { \"id\": {{moduleId}} }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/notes", "host": ["{{baseUrl}}"], "path": ["notes"] }
+          }
+        },
+        {
+          "name": "Get Notes By Etudiant",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/notes/etudiant/{{etudiantId}}", "host": ["{{baseUrl}}"], "path": ["notes", "etudiant", "{{etudiantId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('notes etudiant ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Get Notes By Module",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/notes/module/{{moduleId}}", "host": ["{{baseUrl}}"], "path": ["notes", "module", "{{moduleId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('notes module ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Get Moyenne",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/notes/moyenne/{{etudiantId}}", "host": ["{{baseUrl}}"], "path": ["notes", "moyenne", "{{etudiantId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('moyenne ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Update Note",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"valeur\": 16.0\n}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{baseUrl}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notes", "{{noteId}}"] }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('note update ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "User Can Read Moyenne",
+          "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{userToken}}", "type": "string" }] },
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/notes/moyenne/{{etudiantId}}", "host": ["{{baseUrl}}"], "path": ["notes", "moyenne", "{{etudiantId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('user moyenne ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "06 - Dashboard",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Set Filiere Active",
+          "request": { "method": "POST", "header": [], "url": { "raw": "{{baseUrl}}/dashboard/filiere?nom=DSI API", "host": ["{{baseUrl}}"], "path": ["dashboard", "filiere"], "query": [{ "key": "nom", "value": "DSI API" }] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('set filiere active ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Get Stats",
+          "request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["dashboard", "stats"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('stats ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Reset Dashboard",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/dashboard/reset", "host": ["{{baseUrl}}"], "path": ["dashboard", "reset"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('reset ok', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "07 - Cleanup Admin",
+      "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+      "item": [
+        {
+          "name": "Delete Note",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/notes/{{noteId}}", "host": ["{{baseUrl}}"], "path": ["notes", "{{noteId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('delete note ok', function () { pm.expect(pm.response.code).to.be.oneOf([200, 204]); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Delete Etudiant",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/etudiants/{{etudiantId}}", "host": ["{{baseUrl}}"], "path": ["etudiants", "{{etudiantId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('delete etudiant ok', function () { pm.response.to.have.status(204); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Delete Module",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/modules/{{moduleId}}", "host": ["{{baseUrl}}"], "path": ["modules", "{{moduleId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('delete module ok', function () { pm.response.to.have.status(204); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Delete Filiere",
+          "request": { "method": "DELETE", "header": [], "url": { "raw": "{{baseUrl}}/filieres/{{filiereId}}", "host": ["{{baseUrl}}"], "path": ["filieres", "{{filiereId}}"] } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('delete filiere ok', function () { pm.response.to.have.status(204); });"], "type": "text/javascript" } }]
+        }
+      ]
+    }
+  ]
+}
