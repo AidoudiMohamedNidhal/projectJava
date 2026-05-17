@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filieres - SGE</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="fragments/header :: header"></div>
+
+    <main class="main-container">
+        <div class="page-head">
+            <div>
+                <p class="eyebrow">Administration</p>
+                <h1 class="page-title">Gestion des filieres</h1>
+                <p class="page-subtitle">Ajoutez les parcours, niveaux et capacites d'accueil.</p>
+            </div>
+            <a th:href="@{/admin/dashboard}" class="btn btn-soft">Dashboard</a>
+        </div>
+
+        <section class="panel mb-4">
+            <div class="panel-header">
+                <h2 class="panel-title">Ajouter une filiere</h2>
+            </div>
+            <div class="panel-body">
+                <form th:action="@{/admin/filieres/add}" method="post">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label" for="nom">Nom</label>
+                            <input id="nom" type="text" name="nom" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="niveau">Niveau</label>
+                            <input id="niveau" type="text" name="niveau" class="form-control" placeholder="ex: Licence 2" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="capacite">Capacite</label>
+                            <input id="capacite" type="number" name="capacite" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Ajouter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h2 class="panel-title">Liste des filieres</h2>
+                <span class="text-secondary small" th:text="${filieres.size()} + ' element(s)'">0 element</span>
+            </div>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Niveau</th>
+                        <th>Capacite</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${filieres.empty}">
+                        <td colspan="5" class="empty-state">Aucune filiere enregistree.</td>
+                    </tr>
+                    <tr th:each="filiere : ${filieres}">
+                        <td th:text="${filiere.id}"></td>
+                        <td class="fw-semibold" th:text="${filiere.nom}"></td>
+                        <td th:text="${filiere.niveau}"></td>
+                        <td th:text="${filiere.capacite}"></td>
+                        <td>
+                            <a th:href="@{/admin/filieres/delete/{id}(id=${filiere.id})}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer cette filiere ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div th:replace="fragments/footer :: footer"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
